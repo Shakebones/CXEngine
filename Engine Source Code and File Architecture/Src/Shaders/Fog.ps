@@ -1,0 +1,36 @@
+/*
+ * File name - Fog.ps
+ * Author - CuiXue
+ * Updated date - 2013.3.25
+ * Desc - 
+ *
+ */
+ cbuffer FogColorBuffer
+ {
+	 float4 fog_color;
+ };
+
+ Texture2D shaderTexture;
+ sampler samplerState;
+
+ struct PS_INPUT
+ {
+	 float4 position : SV_POSITION;
+	 float2 tex		 : TEXCOORD0;
+	 float fogFactor : FOG;
+ };
+
+ float4 FogPS(PS_INPUT input) : SV_TARGET
+ {
+	 float4 textureColor;
+	 float4 fogColor;
+	 float4 resultColor;
+
+	 textureColor = shaderTexture.Sample(samplerState, input.tex);
+	 
+	 fogColor = fog_color;
+
+	 resultColor = textureColor * input.fogFactor + (1 - input.fogFactor) * fogColor;
+
+	 return resultColor;
+ };

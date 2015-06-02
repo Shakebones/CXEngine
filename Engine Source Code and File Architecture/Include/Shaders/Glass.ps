@@ -1,0 +1,50 @@
+/*
+ * File name - Glass.ps
+ * Author - CuiXue
+ * Updated date - 2013.6.5
+ * Desc - 
+ *
+ */
+ SamplerState samplerState;
+
+ Texture2D colorTexture : register(t0);
+ Texture2D normalTexture : register(t1);
+ Texture2D refractionTexture : register(t2);
+
+ cbuffer GlassBuffer
+ {
+	float refractionScale;
+	float3 padding;
+ };
+
+ struct PS_INPUT
+ {
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+	float4 refractionPosition : TEXCOORD1;
+ };
+
+ float4 GlassShaderPS(PS_INPUT input) : SV_TARGET
+ {
+	float2 refractionTexCoord;
+	float4 normalMap;
+	float3 normal;
+	float4 refractionColor;
+	float4 textureColor;
+	float4 resultColor;
+
+	refractionTexCoord.x = input.refractionPosition.x / input.refractionPosition.w / 2.0f + 0.5f;
+	refractionTexCoord.y = input.refractionPosition.y / input.refractionPosition.w / 2.0f + 0.5f;
+	normalMap = normalTexture.Sample(samplerState, input.tex);
+	normal = (normalMap.xyz * 2.0f) - 1.0f;
+
+	refractionTexCoord = refractionTexCoord + (normal.xy * refractionScale);
+
+	refractionColor = refractionTexture.Sample(samplerState, refractionTexCoord);
+
+	textureColor = colorTexture.Sample(samplerState, input.tex);
+
+	resultColor = lerp(refractionColor, textureColor, 0.5f);
+
+	return resultColor;
+ }

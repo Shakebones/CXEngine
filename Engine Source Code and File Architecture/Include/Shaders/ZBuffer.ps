@@ -1,0 +1,37 @@
+/*
+ * File name - ZBuffer.ps
+ * Author - CuiXue
+ * Updated date - 2013.7.16
+ * Desc - 
+ *
+ */
+struct PS_INPUT
+{
+	float4 position : SV_POSITION;
+	float4 depthPosition : TEXCOORD0;
+};
+
+float4 ZBufferPS(PS_INPUT input) : SV_TARGET
+{
+	float4 output_color;
+	float depthValue;
+
+	depthValue = input.depthPosition.z / input.depthPosition.w;
+
+	if( depthValue < 0.9f )
+	{
+		output_color = float4(1.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	if( depthValue > 0.9f )
+	{
+		output_color = float4(0.0f, 1.0f, 0.0f, 1.0f);
+	}
+
+	if( depthValue > 0.925f )
+	{
+		output_color = float4(0.0f, 0.0f, 1.0f, 1.0f);
+	}
+
+	return output_color;
+}

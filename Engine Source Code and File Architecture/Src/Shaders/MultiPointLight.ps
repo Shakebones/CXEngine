@@ -1,0 +1,56 @@
+/*
+ * File name - MultiPointLight.ps
+ * Author - CuiXue
+ * Updated date - 2013.5.2
+ * Desc - 
+ *
+ */
+
+Texture2D shaderTexture;
+SamplerState samplerState;
+
+#define NUM_LIGHTS 4
+
+cbuffer LightColorBuffer
+{
+	float4 lightColor[NUM_LIGHTS];
+}
+
+struct PS_INPUT
+{
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+	float3 normal	: NORMAL;
+	float3 light1_pos : TEXCOORD1;
+	float3 light2_pos : TEXCOORD2;
+	float3 light3_pos : TEXCOORD3;
+	float3 light4_pos : TEXCOORD4;
+};
+
+float4 MultiPointLightPS(PS_INPUT input) : SV_TARGET
+{
+	float4 output_color;
+	float4 textureColor;
+	float4 light1Color, light2Color, light3Color, light4Color;
+
+	float light1_intensity;
+	float light2_intensity;
+	float light3_intensity;
+	float light4_intensity;
+
+	light1_intensity = saturate(dot(input.normal, input.light1_pos)) * 5.0f;
+	light2_intensity = saturate(dot(input.normal, input.light2_pos)) * 5.0f;
+	light3_intensity = saturate(dot(input.normal, input.light3_pos)) * 5.0f;
+	light4_intensity = saturate(dot(input.normal, input.light4_pos)) * 5.0f;
+
+	textureColor = shaderTexture.Sample(samplerState, input.tex);
+
+	light1Color = lightColor[0] * light1_intensity;
+	light2Color = lightColor[1] * light2_intensity;
+	light3Color = lightColor[2] * light3_intensity;
+	light4Color = lightColor[3] * light4_intensity;
+
+	output_color = saturate(light1Color + light2Color + light3Color + light4Color) * textureColor;
+
+	return output_color;
+}

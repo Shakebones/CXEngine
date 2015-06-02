@@ -1,0 +1,39 @@
+/*
+ * File name - Font.vs
+ * Author - CuiXue
+ * Updated date - 2013.1.5
+ * Desc -
+ *
+ */
+Texture2D shaderTexture;
+SamplerState samplerState;
+
+cbuffer PixelColorBuffer
+{
+	float4 pixelColor;
+};
+
+// Pixel input structure
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+};
+
+float4 FontPixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 fontColor;
+
+	fontColor = shaderTexture.Sample(samplerState, input.tex);
+
+	if( 0.0f == fontColor.r )
+		fontColor.a = 0.0f;
+
+	else
+	{
+		fontColor.rgb = fontColor.rgb * pixelColor.rgb;
+		fontColor.a = 1.0f;
+	}
+
+	return fontColor;
+};

@@ -1,0 +1,31 @@
+/*
+ * File name - TextureTranslation.ps
+ * Author - CuiXue
+ * Updated date - 2013.4.8
+ * Desc - 
+ *
+ */
+Texture2D shaderTexture;
+SamplerState sampleState;
+
+cbuffer TranslationBuffer
+{
+	float texTranslation;
+};
+
+struct PS_INPUT
+{
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+};
+
+float4 TexTranslationPS(PS_INPUT input) : SV_TARGET
+{
+	float4 finalColor;
+
+	input.tex.x += texTranslation;
+
+	finalColor = shaderTexture.Sample(sampleState, input.tex);
+
+	return finalColor;
+}

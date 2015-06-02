@@ -1,0 +1,76 @@
+/*
+ * File name BumpMap.ps
+ * Author - CuiXue
+ * Updated date 2013.3.11
+ * Desc - 
+ *
+ */
+Texture2D shaderTextures[2];
+sampler samplerState;
+
+cbuffer LightBuffer
+{
+	float4 ambientColor;
+	float4 diffuseColor;
+	float3 lightDir;
+	float  specularPower;
+	float4 specularColor;
+};
+
+// Desc - 
+// Binormal - 副法线
+// Tangent - 切线
+struct PS_INPUT
+{
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+	float3 normal	: NORMAL;
+	float3 tangent	: TANGENT;
+	float3 binormal	: BINORMAL;
+	float3 viewDirection : TEXCOORD1;
+};
+
+float4 BumpMapPS(PS_INPUT input) : SV_TARGET
+{
+	float4 textureColor;
+	float4 bumpMap;
+	float3 bumpNormal;
+	float3 lightDirection;
+	float3 reflection;
+	float  lightIntensity;
+	float4 result;
+	float4 specular;
+
+	specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+	result = ambientColor;
+
+	textureColor = shaderTextures[0].Sample(samplerState, input.tex);
+	bumpMap = shaderTextures[1].Sample(samplerState, input.tex);
+
+	bumpMap = (bumpMap * 2.0f) - 1.0f;
+	bumpNormal = input.normal + bumpMap.x * input.tangent + bumpMap.y * input.binormal;
+
+	bumpNormal = normalize(bumpNormal);
+
+	lightDirection = -lightDir;
+
+	lightIntensity = saturate(dot(bumpNormal, lightDirection));
+
+	if( lightIntensity > 0.0f )
+	{
+		result += (diffuseColor * lightIntensity);
+
+		result = saturate(result);
+
+		reflection = normalize(2 * lightIntensity * bumpNormal - lightDirection);
+
+		specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+	}
+
+	result = result * textureColor;
+
+	result = saturate(result + specular * specularColor);
+
+	return result;
+}

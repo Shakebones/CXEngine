@@ -1,0 +1,21 @@
+/*
+ * File name - ClipPlane.ps
+ * Author - CuiXue
+ * Updated date - 2013.3.26
+ * Desc - 
+ *
+ */
+ Texture2D shaderTexture;
+ sampler samplerState;
+
+ struct PS_INPUT
+ {
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+	float  clip		: SV_ClipDistance0;
+ };
+
+ float4 ClipPlanePS(PS_INPUT input) :SV_TARGET
+ {
+	return shaderTexture.Sample(samplerState, input.tex);
+ }

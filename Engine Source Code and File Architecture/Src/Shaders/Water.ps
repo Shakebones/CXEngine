@@ -1,0 +1,120 @@
+/*
+ * File name - Water.ps
+ * Author - CuiXue
+ * Updated date - 2013.4.21
+ * Desc - 
+ *
+ */
+ SamplerState samplerState;
+ Texture2D reflectionTex;
+ Texture2D refractionTex;
+ Texture2D normalTex;
+
+ cbuffer WaterBuffer
+ {
+	float reflection_refraction_scale;
+	float water_translation;
+	float2 padding;
+ };
+
+ cbuffer LightBuffer
+ {
+	float4 ambientColor;
+	float4 diffuseColor;
+	float3 direction;
+	float specularPower;
+	float4 specularColor;
+ };
+
+ struct PS_INPUT
+ {
+	float4 position : SV_POSITION;
+	float2 tex1		: TEXCOORD0;
+	float2 tex2		: TEXCOORD4;
+	float4 reflectionPos : TEXCOORD1;
+	float4 refractionPos : TEXCOORD2;
+	float3 viewDirection : TEXCOORD3;
+	float3 normal		 : NORMAL;
+	float3 tangent		 : TANGENT;
+	float3 binormal		 : BINORMAL;
+ };
+
+ float4 WaterPS(PS_INPUT input) : SV_TARGET
+ {
+	// Water params
+	float fresnel;
+	float specular;
+	float r;
+	float2 reflection_sample_coord;
+	float2 refraction_sample_coord;
+	float3 normal1;
+	float3 normal2;
+	float3 normal;
+	float3 reflection;
+	float3 heightView;
+	float4 reflectionColor;
+	float4 refractionColor;
+	float4 refl_refr_lerpColor;
+	float4 normalMap1;
+	float4 normalMap2;
+	float4 outputColor;
+	float3 refl;
+	float3 refr;
+
+	float4 water_refl_color = float4( 0.9f, 1.0f, 0.9f, 1.0f );
+	float4 water_refr_color = float4( 0.6f, 1.0f, 0.6f, 1.0f );
+
+	input.tex1.y = input.tex1.y - water_translation;
+	input.tex2.x = input.tex2.x + water_translation;
+
+	heightView.x = input.viewDirection.y;
+	heightView.y = input.viewDirection.y;
+	heightView.z = input.viewDirection.y;
+
+	// Sample normal map
+	normalMap1 = normalTex.Sample(samplerState, input.tex1);
+	normalMap2 = normalTex.Sample(samplerState, input.tex2);
+	normal1 = (normalMap1.rgb * 2.0f) - 1.0f;
+	normal2 = (normalMap2.rgb * 2.0f) - 1.0f;
+	normal = normalize(normal1 + normal2);
+
+	reflection_sample_coord.x =  input.reflectionPos.x / input.reflectionPos.w / 2.0f + 0.5f;
+	reflection_sample_coord.y = -input.reflectionPos.y / input.reflectionPos.w / 2.0f + 0.5f;
+
+	refraction_sample_coord.x =  input.refractionPos.x / input.refractionPos.w / 2.0f + 0.5f;
+	refraction_sample_coord.y = -input.refractionPos.y / input.refractionPos.w / 2.0f + 0.5f;
+
+	refl = reflect(input.reflectionPos, normal);
+	refr = refract(normalize(input.refractionPos), normalize(normal), 0.02037f);  
+	
+	reflection_sample_coord = reflection_sample_coord + (normal.xy * reflection_refraction_scale);
+	refraction_sample_coord = refraction_sample_coord + (normal.xy * reflection_refraction_scale);
+
+	reflectionColor = reflectionTex.Sample(samplerState, reflection_sample_coord);
+	refractionColor = refractionTex.Sample(samplerState, refraction_sample_coord);
+
+	reflectionColor *= water_refl_color;
+	refractionColor *= water_refr_color;
+
+	// Calculate fresnel iterm
+	r = 0.2f;
+
+	fresnel = r + (1.0f - r) * pow(1.0f - dot(normal, heightView), 5.0);
+
+	refl_refr_lerpColor = lerp(reflectionColor, refractionColor, 1.0 - fresnel);
+
+	reflection = -reflect(normalize(direction), normal);
+
+	specular = dot(normalize(reflection), normalize(input.viewDirection));
+
+	if( specular > 0.0f )
+	{
+		specular = pow(specular, specularPower);
+
+		refl_refr_lerpColor = saturate(refl_refr_lerpColor + specular * specularColor);
+	}
+
+	outputColor = refl_refr_lerpColor;
+
+	return outputColor;
+ }

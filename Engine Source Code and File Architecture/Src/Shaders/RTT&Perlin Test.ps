@@ -1,0 +1,31 @@
+/*
+ * File name - RTT&Perlin Test.ps
+ * Author - CuiXue
+ * Updated date - 2013.3.21
+ * Desc -
+ *
+ */
+Texture2D shaderTexture[2];
+SamplerState SampleType;
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+};
+
+float4 RTT_Perlin_PS(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+	float4 perlinColor;
+	float4 resultColor;
+
+	textureColor = shaderTexture[0].Sample(SampleType, input.tex);
+	perlinColor = shaderTexture[1].Sample(SampleType, input.tex);
+
+	resultColor = textureColor* perlinColor * 2.0f;
+
+	resultColor = saturate(resultColor);
+
+	return resultColor;
+}

@@ -1,0 +1,69 @@
+/*
+ * File name - SpecularMapping.ps
+ * Author - CuiXue
+ * Updated date - 2013.3.15
+ * Desc - 
+ *
+ */
+Texture2D shaderTextures[3];
+sampler	samplerState;
+
+cbuffer Light
+{
+	float4 ambientColor;
+	float4 diffuseColor;
+	float3 lightDir;
+	float  specularPower;
+	float4 specularColor;
+};
+
+struct PS_INPUT
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+    float3 binormal : BINORMAL;
+    float3 viewDirection : TEXCOORD1;
+};
+
+float4 SpecularMappingPS(PS_INPUT input) : SV_TARGET
+{
+	float4 textureColor;
+	float4 bumpMap;
+	float4 specular;
+	float4 specularIntensity;
+	float4 resultColor;
+	float3 bumpNormal;
+	float3 lightDirection;
+	float3 reflection;
+	float  lightIntensity;
+
+
+	textureColor = shaderTextures[0].Sample(samplerState, input.tex);
+	bumpMap = shaderTextures[1].Sample(samplerState, input.tex);
+	bumpMap = (bumpMap * 2.0f) - 1.0f;
+
+	bumpNormal =  input.normal + bumpMap.x * input.tangent + bumpMap.y * input.binormal;
+	bumpNormal = normalize(bumpNormal);
+
+	lightDirection = -lightDir;
+
+	resultColor = ambientColor;
+
+	lightIntensity = saturate(dot(bumpNormal, lightDirection));
+
+	resultColor = saturate(diffuseColor * lightIntensity);
+	resultColor = resultColor * textureColor;
+
+	if( lightIntensity > 0.0f )
+	{
+		specularIntensity = shaderTextures[2].Sample(samplerState, input.tex);
+		reflection = normalize(2 * lightIntensity * bumpNormal - lightDirection);
+		specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+		specular = specular * specularIntensity;
+		resultColor = saturate(resultColor + specular);
+	}
+
+	return resultColor;
+}

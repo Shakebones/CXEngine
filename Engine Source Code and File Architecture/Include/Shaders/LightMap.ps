@@ -1,0 +1,29 @@
+/*
+ * File name - LightMap.ps
+ * Author - CuiXue
+ * Updated date - 2013.3.7
+ * Desc - 
+ *
+ */
+Texture2D textures[2];
+sampler	  samplerState;
+
+struct PS_INPUT
+{
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+};
+
+float4 LightMapPS(PS_INPUT input) : SV_TARGET
+{
+	float4 color_texture;
+	float4 color_light_map;
+	float4 result;
+
+	color_texture = textures[0].Sample(samplerState, input.tex);
+	color_light_map = textures[1].Sample(samplerState, input.tex);
+
+	result = color_texture * color_light_map;
+
+	return result;
+}

@@ -1,0 +1,35 @@
+/*
+ * File name - Fade.ps
+ * Author - CuiXue
+ * Updated date - 2013.4.15
+ * Desc - 
+ *
+ */
+ Texture2D shaderTexture;
+ SamplerState samplerState;
+
+ cbuffer FadeBuffer
+ {
+	float fadeFactor;
+	float3 padding;
+ };
+
+ struct PS_INPUT
+ {
+	float4 position : SV_POSITION;
+	float2 tex		: TEXCOORD0;
+ };
+
+ float4 FadePS(PS_INPUT input) : SV_TARGET
+ {
+	float4 textureColor;
+	float4 resultColor;
+
+	textureColor = shaderTexture.Sample(samplerState, input.tex);
+
+	resultColor = textureColor;
+
+	resultColor *= fadeFactor;
+
+	return resultColor;
+ }
